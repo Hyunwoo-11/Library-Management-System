@@ -1,0 +1,10 @@
+# Backend
+backend/node_modules/
+backend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code (선택)
+.vscode/

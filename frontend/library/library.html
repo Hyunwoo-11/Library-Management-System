@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>도서관 관리 시스템</title>
+    <link rel="stylesheet" href="library.css">
+</head>
+<body>
+
+<div class="container">
+    <!-- 상단 바 -->
+    <header class="top-bar">
+        <h1>도서관 관리 시스템</h1>
+        <span class="user-info">로그인 사용자: (읽는 중...)</span>
+        <button class="logout-btn" onclick="location.href='/logout'">로그아웃</button>
+    </header>
+
+    <!-- 메인 메뉴 -->
+    <main class="main-menu">
+
+        <!-- 일반 사용자 공통 메뉴 -->
+        <section class="menu-section">
+            <h2>사용자 메뉴</h2>
+
+            <!-- user permission -->
+            <button class="menu-btn" data-menu="user-books"
+                onclick="location.href='/books'">📚 도서 조회 / 검색</button>
+
+            <button class="menu-btn" data-menu="user-myloans"
+                onclick="location.href='/myloans'">📖 내 대출 현황</button>
+        </section>
+
+        <!-- 사서 / 관리자 메뉴 -->
+        <section class="menu-section">
+            <h2>사서 / 관리자 메뉴</h2>
+
+            <button class="menu-btn" data-menu="lib-book-manage"
+                    onclick="location.href='/manage-books'">
+                📦 도서 등록 / 수정
+            </button>
+
+            <button class="menu-btn" data-menu="lib-loan-manage"
+                    onclick="location.href='/manage-loans'">
+                🔁 대출 / 반납 관리
+            </button>
+        </section>
+
+        <!-- 관리자 전용 메뉴 -->
+        <section class="menu-section">
+            <h2>관리자 메뉴</h2>
+
+            <button class="menu-btn" data-menu="admin-user-manage"
+                    onclick="location.href='/manage-users'">
+                👥 회원 관리
+            </button>
+        </section>
+    </main>
+</div>
+
+<!-- === Chatbot floating button === -->
+<div id="chatbot-btn">💬</div>
+
+<!-- === Chatbot window === -->
+<div id="chatbot-widget">
+  <div id="chatbot-header">
+   도서 장르 추천 챗봇 📚
+  </div>
+  <div id="chatbot-messages"></div>
+  <div id="chatbot-genre-buttons">
+   <!-- 장르 버튼들 -->
+   <button type="button" onclick="sendChat('소설')">소설</button>
+   <button type="button" onclick="sendChat('판타지')">판타지</button>
+   <button type="button" onclick="sendChat('추리/스릴러')">추리/스릴러</button>
+   <button type="button" onclick="sendChat('SF/과학')">SF/과학</button>
+   <button type="button" onclick="sendChat('역사')">역사</button>
+   <button type="button" onclick="sendChat('자기계발')">자기계발</button>
+   <button type="button" onclick="sendChat('IT/컴퓨터')">IT/컴퓨터</button>
+   <button type="button" onclick="sendChat('에세이')">에세이</button>
+   <button type="button" onclick="sendChat('기타')">기타</button>
+  </div>
+  <div id="chatbot-input-area">
+   <input
+    type="text"
+    id="chatbot-input"
+    placeholder="장르 이름을 입력하고 Enter를 누르세요 (예: 판타지)"
+    onkeydown="if(event.key === 'Enter') sendChat();"
+   >
+  </div>
+</div>
+
+<!-- 🔥 역할 기반 버튼 제어 스크립트 -->
+<script>
+  // 각 role 별 허용 메뉴
+  const ROLE_CONFIG = {
+    user: [
+      "user-books",
+      "user-myloans"
+    ],
+    librarian: [
+      "user-books",
+      "user-myloans",
+      "lib-book-manage",
+      "lib-loan-manage"
+    ],
+    admin: [
+      "user-books",
+      "user-myloans",
+      "lib-book-manage",
+      "lib-loan-manage",
+      "admin-user-manage"
+    ]
+  };
+
+  async function initMenu() {
+    const res = await fetch('/session-info');
+    const data = await res.json();
+
+    if (!data.loggedIn) {
+      alert("로그인이 필요합니다.");
+      location.href = "/login/login.html";
+      return;
+    }
+
+    // 로그인 사용자 표시
+    document.querySelector(".user-info").textContent =
+      `로그인 사용자: ${data.name} (${data.role})`;
+
+    const allowed = new Set(ROLE_CONFIG[data.role]);
+
+    // 버튼 제어
+    document.querySelectorAll(".menu-btn").forEach(btn => {
+      const key = btn.dataset.menu;
+      if (!allowed.has(key)) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+      }
+    });
+  }
+
+  initMenu();
+</script>
+
+<script>
+ function appendMessage(sender, text) {
+ const box = document.getElementById('chatbot-messages');
+ const msgDiv = document.createElement('div');
+ msgDiv.className = 'chat-msg ' + sender;
+
+ const bubble = document.createElement('div');
+ bubble.className = 'chat-bubble';
+ bubble.textContent = text;
+
+ msgDiv.appendChild(bubble);
+ box.appendChild(msgDiv);
+ box.scrollTop = box.scrollHeight;
+ }
+
+ // 처음 로드될 때 안내 메시지 한 번 출력
+ window.addEventListener('load', () => {
+ appendMessage(
+ 'bot',
+ "안녕하세요! 도서 장르 추천 챗봇입니다 😊\n" +
+ "아래 장르 버튼을 누르거나, 장르 이름을 직접 입력해 주세요.\n\n" +
+ "예) 소설, 판타지, IT/컴퓨터"
+ );
+ });
+
+ function sendChat(forcedText) {
+ const input = document.getElementById('chatbot-input');
+ const text = (forcedText !== undefined ? forcedText : input.value).trim();
+ if (!text) return;
+
+ // 내가 보낸 메시지 화면에 표시
+ appendMessage('user', text);
+ input.value = '';
+
+ // 서버에 전송
+ fetch('/chatbot', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+ body: new URLSearchParams({ message: text })
+ })
+ .then(res => res.json())
+ .then(data => {
+ appendMessage('bot', data.reply || '응답을 가져오지 못했어요 🥲');
+ })
+ .catch(err => {
+ console.error(err);
+ appendMessage('bot', '서버 오류가 발생했어요 🥲');
+ });
+ }
+</script>
+
+
+
+</body>
+</html>

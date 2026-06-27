@@ -1,0 +1,20 @@
+접속 http://localhost:3000/login/login.html
+
+관리자 계정(1개)
+ID : admin01
+PW : admin123!
+
+사서 계정(2개)
+ID : lib01
+PW : lib1234!
+
+ID : lib02
+PW : lib5678!
+
+유저계정(n개)
+ID : user01
+ID : user02
+ID : user03
+
+PW : 12345678!
+
