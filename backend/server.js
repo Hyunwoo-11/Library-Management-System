@@ -10,7 +10,7 @@ const cookieParser = require('cookie-parser');
 dotenv.config();
 
 // 내부 모듈
-const db = require('./config/db');              // mysql2 풀(POOL)이라고 가정
+const db = require('./config/db');              
 const { loadUserFromToken } = require('./middleware/auth');
 
 // 라우터 생성 함수
@@ -24,16 +24,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ===== 기본 미들웨어 =====
-app.use(express.urlencoded({ extended: true }));      // 폼 데이터 파싱 (form)
-app.use(express.json());                              // 🔥 JSON 바디 파싱 (fetch, axios용)
-app.use(cookieParser());                              // 쿠키 파싱
-app.use(express.static(path.join(__dirname, '../frontend'))); // 정적 파일 제공
-app.use(loadUserFromToken);                           // JWT에서 사용자 정보 로딩
+app.use(express.urlencoded({ extended: true }));      
+app.use(express.json());                             
+app.use(cookieParser());                              
+app.use(express.static(path.join(__dirname, '../frontend'))); 
+app.use(loadUserFromToken);                           
 
 // ===== 라우터 등록 =====
 app.use('/', createAuthRoutes(db));
 app.use('/', createBookRoutes(db));
-app.use('/', createLoanRoutes(db));   // loan 라우터가 트랜잭션 사용
+app.use('/', createLoanRoutes(db));   
 app.use('/', createUserRoutes(db));
 app.use('/', createChatbotRoutes(db));
 
